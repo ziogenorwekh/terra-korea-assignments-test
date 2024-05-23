@@ -5,29 +5,29 @@ import org.springframework.stereotype.Component;
 import java.util.*;
 
 @Component
-public class TestHandler {
+public class TestHourCalcHandler {
 
 
     // 지정한 날짜의 시 단위 최소/최대/평균 사용률
-    public List<TestResultDto> avgCpuUsagePerHour(List<TestEntity> testEntities) {
+    public List<TestPerHourResultDto> avgCpuUsagePerHour(List<TestEntity> testEntities) {
         return this.getTestResultsPerHour(testEntities);
     }
 
     public Double minCpuUsagePerHour(List<TestEntity> testEntities) {
-        List<TestResultDto> testResults = this.getTestResultsPerHour(testEntities);
-        return testResults.stream().mapToDouble(TestResultDto::getAvg).min()
+        List<TestPerHourResultDto> testResults = this.getTestResultsPerHour(testEntities);
+        return testResults.stream().mapToDouble(TestPerHourResultDto::getAvg).min()
                 .orElseThrow(NullPointerException::new);
     }
 
     public Double maxCpuUsagePerHour(List<TestEntity> testEntities) {
-        List<TestResultDto> testResults = this.getTestResultsPerHour(testEntities);
-        return testResults.stream().mapToDouble(TestResultDto::getAvg)
+        List<TestPerHourResultDto> testResults = this.getTestResultsPerHour(testEntities);
+        return testResults.stream().mapToDouble(TestPerHourResultDto::getAvg)
                 .max().orElseThrow(NullPointerException::new);
     }
 
-    private List<TestResultDto> getTestResultsPerHour(List<TestEntity> testEntities) {
+    private List<TestPerHourResultDto> getTestResultsPerHour(List<TestEntity> testEntities) {
         Map<Integer, List<TestEntity>> mapHours = new HashMap<>();
-        List<TestResultDto> resultDtoList = new ArrayList<>();
+        List<TestPerHourResultDto> resultDtoList = new ArrayList<>();
         // 0시 0분부터 23시 59분까지 있음
         testEntities.forEach(result -> {
             Calendar calendar = Calendar.getInstance();
@@ -42,7 +42,7 @@ public class TestHandler {
         mapHours.forEach((integer, testEntities1) -> {
             double avgResult = testEntities1.stream().mapToDouble(TestEntity::getCpuUsage).average()
                     .orElseThrow(NullPointerException::new);
-            resultDtoList.add(new TestResultDto(integer, avgResult));
+            resultDtoList.add(new TestPerHourResultDto(integer, avgResult));
         });
         return resultDtoList;
     }

@@ -1,15 +1,15 @@
 package com.terrakorea.assignment.entity;
 
 
-public class TestResultDto {
+public class TestPerHourResultDto {
 
-    public TestResultDto(Integer hour, Double avg) {
+    public TestPerHourResultDto(Integer hour, Double avg) {
         this.hour = hour;
         this.avg = avg;
     }
 
-    private Integer hour;
-    private Double avg;
+    private final Integer hour;
+    private final Double avg;
 
 
     public Double getAvg() {
