@@ -2,26 +2,49 @@ package com.terrakorea.assignment.entity;
 
 import org.springframework.stereotype.Component;
 
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 @Component
 public class TestHandler {
 
 
-    public Double minCpuUsage(List<TestEntity> testEntities) {
-        return testEntities.stream().min(Comparator.comparingDouble(TestEntity::getCpuUsage))
-                .orElseThrow(NullPointerException::new).getCpuUsage();
+    // 지정한 날짜의 시 단위 최소/최대/평균 사용률
+    public List<TestResultDto> avgCpuUsagePerHour(List<TestEntity> testEntities) {
+        return this.getTestResultsPerHour(testEntities);
     }
 
-    public Double maxCpuUsage(List<TestEntity> testEntities) {
-        return testEntities.stream().max(Comparator.comparingDouble(TestEntity::getCpuUsage))
-                .orElseThrow(NullPointerException::new).getCpuUsage();
+    public Double minCpuUsagePerHour(List<TestEntity> testEntities) {
+        List<TestResultDto> testResults = this.getTestResultsPerHour(testEntities);
+        return testResults.stream().mapToDouble(TestResultDto::getAvg).min()
+                .orElseThrow(NullPointerException::new);
     }
 
-    public Double avgCpuUsage(List<TestEntity> testEntities) {
-        return testEntities.stream()
-                .mapToDouble(TestEntity::getCpuUsage)
-                .average().orElseThrow(NullPointerException::new);
+    public Double maxCpuUsagePerHour(List<TestEntity> testEntities) {
+        List<TestResultDto> testResults = this.getTestResultsPerHour(testEntities);
+        return testResults.stream().mapToDouble(TestResultDto::getAvg)
+                .max().orElseThrow(NullPointerException::new);
     }
+
+    private List<TestResultDto> getTestResultsPerHour(List<TestEntity> testEntities) {
+        Map<Integer, List<TestEntity>> mapHours = new HashMap<>();
+        List<TestResultDto> resultDtoList = new ArrayList<>();
+        // 0시 0분부터 23시 59분까지 있음
+        testEntities.forEach(result -> {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(result.getCreatedDate());
+            int hour = calendar.get(Calendar.HOUR_OF_DAY);
+            mapHours.computeIfAbsent(hour, k -> new ArrayList<>()).add(result);
+            // 처음 설정된 값이 0시 0분이니까 0시 59분까지의 값을 모두 더해서 평균 산출
+//            System.out.printf("cpu usage -> %s, date -> %s, minute -> %s\n", result.getCpuUsage(),
+//                    result.getCreatedDate(), calendar.get(Calendar.MINUTE));
+        });
+
+        mapHours.forEach((integer, testEntities1) -> {
+            double avgResult = testEntities1.stream().mapToDouble(TestEntity::getCpuUsage).average()
+                    .orElseThrow(NullPointerException::new);
+            resultDtoList.add(new TestResultDto(integer, avgResult));
+        });
+        return resultDtoList;
+    }
+
 }
