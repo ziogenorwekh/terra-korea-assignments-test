@@ -36,6 +36,6 @@ out/
 ### VS Code ###
 .vscode/
 
-application-test.yml
+#application-test.yml
 application-prod.yml
 application.yml

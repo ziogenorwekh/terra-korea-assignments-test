@@ -25,7 +25,7 @@ public class TestEntity {
     private Double cpuUsage;
 
     @Column(name = "created_date")
-    @Temporal(value = TemporalType.DATE)
+    @Temporal(value = TemporalType.TIMESTAMP)
     private Date createdDate;
 
     @Temporal(value = TemporalType.TIME)
