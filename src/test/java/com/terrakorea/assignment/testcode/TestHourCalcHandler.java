@@ -1,4 +1,4 @@
-package com.terrakorea.assignment.entity;
+package com.terrakorea.assignment.testcode;
 
 import org.springframework.stereotype.Component;
 
@@ -15,8 +15,9 @@ public class TestHourCalcHandler {
 
     public Double minCpuUsagePerHour(List<TestEntity> testEntities) {
         List<TestPerHourResultDto> testResults = this.getTestResultsPerHour(testEntities);
-        return testResults.stream().mapToDouble(TestPerHourResultDto::getAvg).min()
-                .orElseThrow(NullPointerException::new);
+        return testResults.stream()
+                .mapToDouble(TestPerHourResultDto::getAvg)
+                .min().orElseThrow(NullPointerException::new);
     }
 
     public Double maxCpuUsagePerHour(List<TestEntity> testEntities) {
@@ -31,7 +32,8 @@ public class TestHourCalcHandler {
         // 0시 0분부터 23시 59분까지 있음
         testEntities.forEach(result -> {
             Calendar calendar = Calendar.getInstance();
-            calendar.setTime(result.getCreatedDate());
+            calendar.setTime(result.getCreatedTime());
+
             int hour = calendar.get(Calendar.HOUR_OF_DAY);
             mapHours.computeIfAbsent(hour, k -> new ArrayList<>()).add(result);
             // 처음 설정된 값이 0시 0분이니까 0시 59분까지의 값을 모두 더해서 평균 산출

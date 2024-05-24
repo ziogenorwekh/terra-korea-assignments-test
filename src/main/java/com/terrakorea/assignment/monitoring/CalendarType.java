@@ -1,5 +1,5 @@
 package com.terrakorea.assignment.monitoring;
 
-public enum TimeEnum {
+public enum CalendarType {
     DAY, HOUR
 }

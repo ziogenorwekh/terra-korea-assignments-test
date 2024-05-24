@@ -1,6 +1,7 @@
 package com.terrakorea.assignment;
 
-import com.terrakorea.assignment.entity.*;
+import com.terrakorea.assignment.monitoring.CalendarType;
+import com.terrakorea.assignment.testcode.*;
 import com.terrakorea.assignment.monitoring.CustomTimer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -27,10 +28,7 @@ public class ValidationCodeWithDatabaseTests {
     private TestRepository testRepository;
 
     @Autowired
-    private TestHourCalcHandler testHourCalcHandler;
-
-    @Autowired
-    private TestDayCalcHandler testDayCalcHandler;
+    private TestCalcHandler testCalcHandler;
 
     private final int testSaveMinuteValue = 60 * 24;
 
@@ -69,7 +67,8 @@ public class ValidationCodeWithDatabaseTests {
     }
 
     @Test
-    @DisplayName("분 단위 조회: 지정한 시간 구간의 분 단위 CPU 사용률을 조회합니다.")
+//    @DisplayName("분 단위 조회: 지정한 시간 구간의 분 단위 CPU 사용률을 조회합니다.")
+    @Deprecated
     public void retrieveCpuUsagePerMinute() {
 
         // given
@@ -96,7 +95,7 @@ public class ValidationCodeWithDatabaseTests {
         List<TestEntity> testEntities = testRepository.findByCreatedDateIsBetween(startDateTime, endDateTime);
 
         // then
-        Assertions.assertEquals(120, testEntities.size());
+        Assertions.assertEquals(300, testEntities.size());
 
         // print
 //        testEntities.forEach(result -> {
@@ -107,7 +106,8 @@ public class ValidationCodeWithDatabaseTests {
     }
 
     @Test
-    @DisplayName("시 단위 조회: 지정한 날짜의 시 단위 CPU 최소/최대/평균 사용률을 조회합니다.")
+//    @DisplayName("시 단위 조회: 지정한 날짜의 시 단위 CPU 최소/최대/평균 사용률을 조회합니다.(X)")
+    @Deprecated
     public void minMaxAvgCpuUsagePerHourOfDay() {
 
         // given (3일치 데이터 기록) 20 ~ 22
@@ -132,16 +132,18 @@ public class ValidationCodeWithDatabaseTests {
 
         Calendar newCal2 = Calendar.getInstance();
         newCal2.setTimeZone(TimeZone.getTimeZone(timer.Seoul));
-        newCal2.set(2024, Calendar.JUNE, 23, 0, 0, 00);
+//        newCal2.set(2024, Calendar.JUNE, 23, 0, 0, 00);
+        newCal2.set(2024, Calendar.JUNE, 22, 23, 59, 59);
         Date endSearchDate = newCal2.getTime();
 
         // when
         List<TestEntity> testEntities = testRepository.findAll();
         List<TestEntity> byCreatedDate = testRepository.findByCreatedDateIsBetween(startSearchDate, endSearchDate);
 
-        List<TestPerHourResultDto> resultDtoList = testHourCalcHandler.avgCpuUsagePerHour(byCreatedDate);
-        Double minValue = testHourCalcHandler.minCpuUsagePerHour(byCreatedDate);
-        Double maxValue = testHourCalcHandler.maxCpuUsagePerHour(byCreatedDate);
+
+        List<TestResultDto> resultDtoList = testCalcHandler.avgCpuUsage(byCreatedDate, CalendarType.HOUR);
+        Double minValue = testCalcHandler.minCpuUsage(byCreatedDate, CalendarType.HOUR);
+        Double maxValue = testCalcHandler.maxCpuUsage(byCreatedDate, CalendarType.HOUR);
 
         // then
         Assertions.assertEquals(testSaveMinuteValue * 3, testEntities.size());
@@ -168,7 +170,8 @@ public class ValidationCodeWithDatabaseTests {
     }
 
     @Test
-    @DisplayName("일 단위 조회: 지정한 날짜 구간의 일 단위 CPU 최소/최대/평균 사용률을 조회합니다.")
+//    @DisplayName("일 단위 조회: 지정한 날짜 구간의 일 단위 CPU 최소/최대/평균 사용률을 조회합니다.")
+    @Deprecated
     public void minMaxAvgCpuUsagePerDay() {
 
         // given (10일부터 24일까지 분 단위 랜덤 값 저장)
@@ -193,15 +196,15 @@ public class ValidationCodeWithDatabaseTests {
 
         Calendar newCal2 = Calendar.getInstance();
         newCal2.setTimeZone(TimeZone.getTimeZone(timer.Seoul));
-        newCal2.set(2024, Calendar.JUNE, 22, 0, 0, 00);
+        newCal2.set(2024, Calendar.JUNE, 21, 23, 59, 0);
         Date endSearchDate = newCal2.getTime();
 
         // when
         List<TestEntity> testEntities = testRepository.findByCreatedDateIsBetween(startSearchDate, endSearchDate);
 
-        List<TestPerDayResultDto> resultDtos = testDayCalcHandler.avgCpuUsagePerDay(testEntities);
-        Double minValue = testDayCalcHandler.minCpuUsagePerDay(testEntities);
-        Double maxValue = testDayCalcHandler.maxCpuUsagePerDay(testEntities);
+        List<TestResultDto> resultDtos = testCalcHandler.avgCpuUsage(testEntities, CalendarType.DAY);
+        Double minValue = testCalcHandler.minCpuUsage(testEntities, CalendarType.DAY);
+        Double maxValue = testCalcHandler.maxCpuUsage(testEntities, CalendarType.DAY);
 
         // then
 
@@ -214,16 +217,125 @@ public class ValidationCodeWithDatabaseTests {
                 max = v;
             }
         }
-
+        Assertions.assertEquals(7, resultDtos.size());
         Assertions.assertEquals(min, minValue);
         Assertions.assertEquals(max, maxValue);
 
         // print
-//        resultDtos.forEach(result -> {
-//            System.out.printf("min -> %s, max -> %s, cpu Avg -> %s, days -> %s\n", minValue, maxValue, result.getAvg(),
-//                    result.getDays());
-//        });
+        resultDtos.forEach(result -> {
+            System.out.printf("cpu Avg -> %s, days -> %s\n", result.getAvg(),
+                    result.getDays());
+        });
     }
 
+    @Test
+    @DisplayName("분 단위 조회: 지정한 시간 구간의 분 단위 CPU 사용률을 조회합니다.")
+    public void retrieveCpuUsagePerMinute2() {
+        // given (3일치 데이터 기록) 20 ~ 22
+        for (int i = 0; i < testSaveMinuteValue * 3; i++) {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTimeZone(TimeZone.getTimeZone(timer.Seoul));
+            calendar.set(2024, Calendar.JUNE, 20, 1, i, 00);
+            Date date = calendar.getTime();
+            double random = ((int) (Math.random() * 8880) + 1) / 100.0;
+            TestEntity testEntity = new TestEntity(random, date, date);
+            testRepository.save(testEntity);
+        }
 
+        Calendar newCal1 = Calendar.getInstance();
+        newCal1.setTimeZone(TimeZone.getTimeZone(timer.Seoul));
+        newCal1.set(2024, Calendar.JUNE, 21, 0, 0, 0);
+        Calendar newCal2 = Calendar.getInstance();
+        newCal2.setTimeZone(TimeZone.getTimeZone(timer.Seoul));
+        newCal2.set(2024, Calendar.JUNE, 21, 1, 0, 0);
+
+        Calendar newCal3 = Calendar.getInstance();
+        newCal3.setTimeZone(TimeZone.getTimeZone(timer.Seoul));
+        newCal3.set(2024, Calendar.JUNE, 21, 0, 0, 0);
+        Date startDate = newCal1.getTime();
+        Date endDate = newCal2.getTime();
+        Date findDate = newCal3.getTime();
+
+        // when
+        List<TestEntity> createdDate = testRepository.findByCreatedDateAndCreatedTimeIsBetween(findDate, startDate, endDate);
+
+        // then
+        Assertions.assertEquals(60, createdDate.size()); // 60 0시~1시까지의 분 단위
+
+        // print
+
+        createdDate.forEach(testEntity -> {
+            System.out.printf("cpu ->%s, date -> %s, time-> %s\n", testEntity.getCpuUsage(),
+                    testEntity.getCreatedDate(), testEntity.getCreatedTime());
+        });
+    }
+
+    @Test
+    @DisplayName("시 단위 조회: 지정한 날짜의 시 단위 CPU 최소/최대/평균 사용률을 조회합니다.")
+    public void minMaxAvgCpuUsagePerHour2() {
+        // given (3일치 데이터 기록) 20 ~ 22
+        for (int i = 0; i < testSaveMinuteValue * 3; i++) {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTimeZone(TimeZone.getTimeZone(timer.Seoul));
+            calendar.set(2024, Calendar.JUNE, 20, 1, i, 00);
+            Date date = calendar.getTime();
+            double random = ((int) (Math.random() * 8880) + 1) / 100.0;
+            TestEntity testEntity = new TestEntity(random, date, date);
+            testRepository.save(testEntity);
+        }
+        Calendar newCal1 = Calendar.getInstance();
+        newCal1.setTimeZone(TimeZone.getTimeZone(timer.Seoul));
+        newCal1.set(2024, Calendar.JUNE, 21, 0, 0, 00);
+        Date searchDate = newCal1.getTime();
+
+
+        // when
+        List<TestEntity> createdDate = testRepository.findByCreatedDate(searchDate);
+        List<TestResultDto> testPerHourResultDtos = testCalcHandler.avgCpuUsage(createdDate, CalendarType.HOUR);
+        Double maxValue = testCalcHandler.maxCpuUsage(createdDate, CalendarType.HOUR);
+        Double minValue = testCalcHandler.minCpuUsage(createdDate, CalendarType.HOUR);
+
+        // then
+        Assertions.assertEquals(1440, createdDate.size());
+        Assertions.assertEquals(24, testPerHourResultDtos.size()); // 시간 당 평균값이므로, 24
+
+        // print
+        System.out.println("minValue = " + minValue);
+        System.out.println("maxValue = " + maxValue);
+        System.out.println("testPerHourResultDtos.size() = " + testPerHourResultDtos.size());
+
+        testPerHourResultDtos.stream().forEach(testPerHourResultDto -> {
+            System.out.printf("hour -> %s,avg -> %s\n", testPerHourResultDto.getHour(), testPerHourResultDto.getAvg());
+        });
+    }
+
+    @Test
+    @DisplayName("일 단위의 평균값 계산")
+    public void minMaxAvgCpuUsagePerDay2() {
+        // given (10일부터 24일까지 분 단위 랜덤 값 저장)
+        for (int i = 0; i < testSaveMinuteValue * 10; i++) {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTimeZone(TimeZone.getTimeZone(timer.Seoul));
+            calendar.set(2024, Calendar.JUNE, 15, 0, i, 00);
+            Date date = calendar.getTime();
+            double random = ((int) (Math.random() * 8880) + 1) / 100.0;
+            TestEntity testEntity = new TestEntity(random, date, date);
+            testRepository.save(testEntity);
+        }
+
+        Calendar newCal1 = Calendar.getInstance();
+        newCal1.setTimeZone(TimeZone.getTimeZone(timer.Seoul));
+        newCal1.set(2024, Calendar.JUNE, 18, 0, 0, 00);
+        Date searchDate = newCal1.getTime();
+
+        // when
+        List<TestEntity> createdDate = testRepository.findByCreatedDate(searchDate);
+        List<TestResultDto> testResultDtos = testCalcHandler.avgCpuUsage(createdDate, CalendarType.DAY);
+
+        // then
+        Assertions.assertEquals(1440, createdDate.size());
+        Assertions.assertEquals(1, testResultDtos.size()); // 일 당 평균값이므로 1
+
+
+    }
 }

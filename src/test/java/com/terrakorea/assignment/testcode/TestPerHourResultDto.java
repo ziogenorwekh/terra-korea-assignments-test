@@ -1,4 +1,4 @@
-package com.terrakorea.assignment.entity;
+package com.terrakorea.assignment.testcode;
 
 
 public class TestPerHourResultDto {

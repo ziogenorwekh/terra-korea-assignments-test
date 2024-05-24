@@ -21,7 +21,7 @@ public class CpuUsageEntity {
     private Double cpuUsage;
 
     @Column(name = "CREATED_DATE")
-    @Temporal(value = TemporalType.TIMESTAMP)
+    @Temporal(value = TemporalType.DATE)
     private Date createdDate;
 
     @Temporal(value = TemporalType.TIME)

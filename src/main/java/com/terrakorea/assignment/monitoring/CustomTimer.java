@@ -1,8 +1,6 @@
 package com.terrakorea.assignment.monitoring;
 
-import org.springframework.stereotype.Component;
 
-@Component
 public class CustomTimer {
 
 
@@ -11,5 +9,4 @@ public class CustomTimer {
     public static Long aHour = 1000L * 60 * 60;
     public static Long aDay = 1000L * 60 * 60 * 24;
     public static String Seoul = "Asia/Seoul";
-
 }

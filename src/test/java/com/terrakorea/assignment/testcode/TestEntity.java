@@ -1,4 +1,4 @@
-package com.terrakorea.assignment.entity;
+package com.terrakorea.assignment.testcode;
 
 import jakarta.persistence.*;
 
@@ -25,12 +25,13 @@ public class TestEntity {
     private Double cpuUsage;
 
     @Column(name = "created_date")
-    @Temporal(value = TemporalType.TIMESTAMP)
+    @Temporal(value = TemporalType.DATE)
     private Date createdDate;
 
     @Temporal(value = TemporalType.TIME)
     @Column(name = "created_time")
     private Date createdTime;
+
 
 
     public Double getCpuUsage() {
