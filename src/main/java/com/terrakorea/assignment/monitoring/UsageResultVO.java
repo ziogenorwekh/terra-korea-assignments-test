@@ -3,14 +3,16 @@ package com.terrakorea.assignment.monitoring;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.util.Date;
+
 @Getter
 public class UsageResultVO {
-    private Integer days;
+    private Date days;
     private Double avg;
     private Integer hour;
 
     @Builder
-    public UsageResultVO(Integer days, Double avg, Integer hour) {
+    public UsageResultVO(Date days, Double avg, Integer hour) {
         this.days = days;
         this.avg = avg;
         this.hour = hour;

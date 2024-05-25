@@ -35,9 +35,15 @@ public class CpuUsageDataMapper {
                 .build();
     }
 
-    public CpuUsageHourResponse dtoToHourResponse(CpuUsageEntityDto cpuUsageEntityDto, UsageResultVO usageResultVO,
+    public CpuUsageHourResponse dtoToHourResponse(Date searchDate, UsageResultVO usageResultVO,
                                                   Double maxValue, Double minValue) {
-        return null;
+        return CpuUsageHourResponse.builder()
+                .time(usageResultVO.getHour())
+                .date(searchDate)
+                .avgCpuUsage(usageResultVO.getAvg())
+                .maxCpuUsage(maxValue)
+                .minCpuUsage(minValue)
+                .build();
     }
 
     public CpuUsageDayResponse dtoToDayResponse(CpuUsageEntityDto cpuUsageEntityDto) {

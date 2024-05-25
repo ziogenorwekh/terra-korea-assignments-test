@@ -1,11 +1,12 @@
 package com.terrakorea.assignment.testcode;
 
 
+import java.util.Date;
 
 public class TestResultDto {
 
 
-    private Integer days;
+    private Date days;
     private final Double avg;
     private Integer hour;
 
@@ -19,7 +20,7 @@ public class TestResultDto {
         return avg;
     }
 
-    public Integer getDays() {
+    public Date getDays() {
         return days;
     }
 
@@ -28,14 +29,14 @@ public class TestResultDto {
     }
 
     public static class Builder {
-        private Integer days;
+        private Date days;
         private Double avg;
         private Integer hour;
 
         public Builder() {
         }
 
-        public Builder days(Integer days) {
+        public Builder days(Date days) {
             this.days = days;
             return this;
         }

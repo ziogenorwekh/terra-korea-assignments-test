@@ -2,6 +2,7 @@ package com.terrakorea.assignment.service;
 
 import com.terrakorea.assignment.dto.CpuUsageEntityDto;
 import com.terrakorea.assignment.entity.CpuUsageEntity;
+import com.terrakorea.assignment.exception.DataNotFoundException;
 import com.terrakorea.assignment.exception.InvalidateCalendarException;
 import com.terrakorea.assignment.mapper.CpuUsageDataMapper;
 import com.terrakorea.assignment.monitoring.CalendarType;
@@ -9,10 +10,7 @@ import com.terrakorea.assignment.monitoring.CpuUsageHandler;
 import com.terrakorea.assignment.monitoring.CustomTimer;
 import com.terrakorea.assignment.monitoring.UsageResultVO;
 import com.terrakorea.assignment.repository.CpuUsageRepository;
-import com.terrakorea.assignment.vo.CpuUsageDayResponse;
-import com.terrakorea.assignment.vo.CpuUsageHourResponse;
-import com.terrakorea.assignment.vo.CpuUsageMinuteResponse;
-import com.terrakorea.assignment.vo.CpuUsageRequest;
+import com.terrakorea.assignment.vo.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -62,10 +60,13 @@ public class CpuUsageServiceImpl implements CpuUsageService {
         List<CpuUsageEntityDto> mappingDto = cpuUsageEntities.stream()
                 .map(cpuUsageDataMapper::entityToDto).toList();
 
+        isNotFoundData(mappingDto);
+
         return mappingDto.stream().map(cpuUsageDataMapper::dtoToMinuteResponse).toList();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<CpuUsageHourResponse> findCpuUsageHour(CpuUsageRequest cpuUsageRequest) {
 
         // 현재 시간 변환
@@ -77,19 +78,54 @@ public class CpuUsageServiceImpl implements CpuUsageService {
 
         List<CpuUsageEntityDto> cpuUsageEntities = cpuUsageRepository.findByCreatedDate(findCalendar.getTime())
                 .stream().map(cpuUsageDataMapper::entityToDto).toList();
+        isNotFoundData(cpuUsageEntities);
 
         List<UsageResultVO> resultVOList = cpuUsageHandler.avgCpuUsage(cpuUsageEntities, CalendarType.HOUR);
-        Double maxValue = cpuUsageHandler.maxCpuUsage(cpuUsageEntities, CalendarType.HOUR);
-        Double minValue = cpuUsageHandler.minCpuUsage(cpuUsageEntities, CalendarType.HOUR);
+        Double maxValue = cpuUsageHandler.maxCpuUsage(resultVOList);
+        Double minValue = cpuUsageHandler.minCpuUsage(resultVOList);
 
         List<CpuUsageHourResponse> cpuUsageHourResponses = new ArrayList<>();
         // 여기 부터 코드 짜기
+        resultVOList.forEach(resultVO -> {
+            cpuUsageHourResponses.add(cpuUsageDataMapper
+                    .dtoToHourResponse(findCalendar.getTime(), resultVO, maxValue, minValue));
+        });
 
-        return null;
+
+        return cpuUsageHourResponses;
     }
 
     @Override
-    public CpuUsageDayResponse findCpuUsageDay() {
+    @Transactional(readOnly = true)
+    public CpuUsageDayResponse findCpuUsageDay(CpuUsageRangeRequest cpuUsageRangeRequest) {
+        Calendar startCalendar = Calendar.getInstance();
+        startCalendar.setTimeZone(TimeZone.getTimeZone(CustomTimer.Seoul));
+        startCalendar.set(cpuUsageRangeRequest.getYear(), cpuUsageRangeRequest.getFromMonth() - 1,
+                cpuUsageRangeRequest.getFromDay(), 0, 0, 0);
+        Date startDate = startCalendar.getTime();
+
+        validCalendarRecentDataWithinAYears(startCalendar);
+
+        Calendar endCalendar = Calendar.getInstance();
+        endCalendar.setTimeZone(TimeZone.getTimeZone(CustomTimer.Seoul));
+        endCalendar.set(cpuUsageRangeRequest.getYear(), cpuUsageRangeRequest.getToMonth() - 1,
+                cpuUsageRangeRequest.getToDay() - 1, 23, 59, 59);
+        Date endDate = endCalendar.getTime();
+
+        List<CpuUsageEntityDto> cpuUsageEntities = cpuUsageRepository.findByCreatedDateIsBetween(startDate, endDate)
+                .stream().map(cpuUsageDataMapper::entityToDto).toList();
+        isNotFoundData(cpuUsageEntities);
+
+        List<UsageResultVO> usageResultVOS = cpuUsageHandler.avgCpuUsage(cpuUsageEntities, CalendarType.DAY);
+        Double maxValue = cpuUsageHandler.maxCpuUsage(usageResultVOS);
+        Double minValue = cpuUsageHandler.minCpuUsage(usageResultVOS);
+
+        List<CpuUsageDayResponse> cpuUsageDayResponses = new ArrayList<>();
+
+        usageResultVOS.forEach(usageResultVO -> {
+//            cpuUsageDayResponses.add()
+        });
+
         return null;
     }
 
@@ -117,6 +153,26 @@ public class CpuUsageServiceImpl implements CpuUsageService {
 
         if (calendar.before(threeMonthsAgo) || calendar.after(now)) {
             throw new InvalidateCalendarException("You can only access data from last 3 months.");
+        }
+    }
+
+    // 최근 1년 이내 데이터만 검색 허용
+    private void validCalendarRecentDataWithinAYears(Calendar calendar) {
+        Calendar now = Calendar.getInstance();
+        now.setTimeZone(TimeZone.getTimeZone(CustomTimer.Seoul));
+
+        Calendar aYearsAgo = (Calendar) now.clone();
+        aYearsAgo.add(Calendar.YEAR, -1);
+
+        if (calendar.before(aYearsAgo) || calendar.after(now)) {
+            throw new InvalidateCalendarException("You can only access data from last 1 years.");
+        }
+    }
+
+    // 조회 데이터가 없을 경우
+    private void isNotFoundData(List<CpuUsageEntityDto> cpuUsageEntities) {
+        if (cpuUsageEntities.isEmpty()) {
+            throw new DataNotFoundException("No CPU usage data found.");
         }
     }
 }

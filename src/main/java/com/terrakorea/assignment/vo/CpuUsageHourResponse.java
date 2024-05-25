@@ -9,13 +9,13 @@ import java.util.Date;
 public class CpuUsageHourResponse {
 
     private final Date date;
-    private final Date time;
+    private final int time;
     private final Double minCpuUsage;
     private final Double maxCpuUsage;
     private final Double avgCpuUsage;
 
     @Builder
-    public CpuUsageHourResponse(Date date, Date time, Double minCpuUsage, Double maxCpuUsage, Double avgCpuUsage) {
+    public CpuUsageHourResponse(Date date, int time, Double minCpuUsage, Double maxCpuUsage, Double avgCpuUsage) {
         this.date = date;
         this.time = time;
         this.minCpuUsage = minCpuUsage;

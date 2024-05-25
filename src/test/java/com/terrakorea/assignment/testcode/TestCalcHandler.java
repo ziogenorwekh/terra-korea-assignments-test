@@ -9,14 +9,12 @@ import java.util.*;
 public class TestCalcHandler {
 
 
-    public Double maxCpuUsage(List<TestEntity> testEntities, CalendarType calendarType) {
-        List<TestResultDto> testResultsPerDay = this.getTestResults(testEntities, calendarType);
+    public Double maxCpuUsage(List<TestResultDto> testResultsPerDay, CalendarType calendarType) {
         return testResultsPerDay.stream().mapToDouble(TestResultDto::getAvg).max()
                 .orElseThrow(NullPointerException::new);
     }
 
-    public Double minCpuUsage(List<TestEntity> testEntities, CalendarType calendarType) {
-        List<TestResultDto> testResultsPerDay = this.getTestResults(testEntities, calendarType);
+    public Double minCpuUsage(List<TestResultDto> testResultsPerDay, CalendarType calendarType) {
         return testResultsPerDay.stream()
                 .mapToDouble(TestResultDto::getAvg)
                 .min().orElseThrow(NullPointerException::new);
@@ -27,7 +25,7 @@ public class TestCalcHandler {
     }
 
     private List<TestResultDto> getTestResults(List<TestEntity> testEntities, CalendarType calendarType) {
-        Map<Integer, List<TestEntity>> mapHours = new HashMap<>();
+        Map<Object, List<TestEntity>> mapHours = new HashMap<>();
         List<TestResultDto> resultDtoList = new ArrayList<>();
         if (calendarType == CalendarType.HOUR) {
             testEntities.forEach(result -> {
@@ -37,25 +35,30 @@ public class TestCalcHandler {
                 mapHours.computeIfAbsent(day, k -> new ArrayList<>()).add(result);
             });
             mapHours.forEach((integer, testEntities1) -> {
-                double avgResult = testEntities1.stream().mapToDouble(TestEntity::getCpuUsage).average()
-                        .orElseThrow(NullPointerException::new);
-                resultDtoList.add(new TestResultDto.Builder().avg(avgResult).hour(integer).build());
+                if (!testEntities1.isEmpty()) {
+                    double avgResult = testEntities1.stream().mapToDouble(TestEntity::getCpuUsage).average()
+                            .orElseThrow(NullPointerException::new);
+                    resultDtoList.add(new TestResultDto.Builder().avg(avgResult).hour((int) integer).build());
+
+                }
             });
-            return resultDtoList;
         } else {
             testEntities.forEach(result -> {
-                Calendar calendar = Calendar.getInstance();
-                calendar.setTime(result.getCreatedDate());
-                int day = calendar.get(Calendar.DATE);
-                mapHours.computeIfAbsent(day, k -> new ArrayList<>()).add(result);
+//                Calendar calendar = Calendar.getInstance();
+//                calendar.setTime(result.getCreatedDate());
+//                int day = calendar.get(Calendar.DATE);
+                mapHours.computeIfAbsent(result.getCreatedDate(), k -> new ArrayList<>()).add(result);
             });
             mapHours.forEach((integer, testEntities1) -> {
-                double avgResult = testEntities1.stream().mapToDouble(TestEntity::getCpuUsage).average()
-                        .orElseThrow(NullPointerException::new);
-                resultDtoList.add(new TestResultDto.Builder().days(integer).avg(avgResult).build());
+                if (!testEntities1.isEmpty()) {
+                    double avgResult = testEntities1.stream().mapToDouble(TestEntity::getCpuUsage).average()
+                            .orElseThrow(NullPointerException::new);
+                    resultDtoList.add(new TestResultDto.Builder().days(testEntities1.get(0).getCreatedDate())
+                            .avg(avgResult).build());
+                }
             });
-        return resultDtoList;
         }
+        return resultDtoList;
 
     }
 

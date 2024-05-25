@@ -1,5 +1,7 @@
 package com.terrakorea.assignment;
 
+import com.terrakorea.assignment.exception.DataNotFoundException;
+import com.terrakorea.assignment.exception.InvalidateCalendarException;
 import com.terrakorea.assignment.monitoring.CalendarType;
 import com.terrakorea.assignment.testcode.*;
 import com.terrakorea.assignment.monitoring.CustomTimer;
@@ -142,8 +144,8 @@ public class ValidationCodeWithDatabaseTests {
 
 
         List<TestResultDto> resultDtoList = testCalcHandler.avgCpuUsage(byCreatedDate, CalendarType.HOUR);
-        Double minValue = testCalcHandler.minCpuUsage(byCreatedDate, CalendarType.HOUR);
-        Double maxValue = testCalcHandler.maxCpuUsage(byCreatedDate, CalendarType.HOUR);
+        Double minValue = testCalcHandler.minCpuUsage(resultDtoList, CalendarType.HOUR);
+        Double maxValue = testCalcHandler.maxCpuUsage(resultDtoList, CalendarType.HOUR);
 
         // then
         Assertions.assertEquals(testSaveMinuteValue * 3, testEntities.size());
@@ -170,15 +172,14 @@ public class ValidationCodeWithDatabaseTests {
     }
 
     @Test
-//    @DisplayName("일 단위 조회: 지정한 날짜 구간의 일 단위 CPU 최소/최대/평균 사용률을 조회합니다.")
-    @Deprecated
+    @DisplayName("일 단위 조회: 지정한 날짜 구간의 일 단위 CPU 최소/최대/평균 사용률을 조회합니다.")
     public void minMaxAvgCpuUsagePerDay() {
 
-        // given (10일부터 24일까지 분 단위 랜덤 값 저장)
-        for (int i = 0; i < testSaveMinuteValue * 10; i++) {
+        // given (5일부터 다음 달 15(~14)일까지 분 단위 랜덤 값 저장)
+        for (int i = 0; i < testSaveMinuteValue * 40; i++) {
             Calendar calendar = Calendar.getInstance();
             calendar.setTimeZone(TimeZone.getTimeZone(timer.Seoul));
-            calendar.set(2024, Calendar.JUNE, 15, 0, i, 00);
+            calendar.set(2024, Calendar.JUNE, 5, 0, i, 00);
             Date date = calendar.getTime();
             double random = ((int) (Math.random() * 8880) + 1) / 100.0;
             TestEntity testEntity = new TestEntity(random, date, date);
@@ -188,26 +189,25 @@ public class ValidationCodeWithDatabaseTests {
         Double max = 0.0;
         Double min = 100.0;
 
-        // 15 일 ~ 22 사이 데이터 조회
+        // 15 일 ~ 21 사이 데이터 조회
         Calendar newCal1 = Calendar.getInstance();
         newCal1.setTimeZone(TimeZone.getTimeZone(timer.Seoul));
-        newCal1.set(2024, Calendar.JUNE, 15, 0, 0, 00);
+        newCal1.set(2024, Calendar.JUNE, 8, 0, 0, 00);
         Date startSearchDate = newCal1.getTime();
 
         Calendar newCal2 = Calendar.getInstance();
         newCal2.setTimeZone(TimeZone.getTimeZone(timer.Seoul));
-        newCal2.set(2024, Calendar.JUNE, 21, 23, 59, 0);
+        newCal2.set(2024, Calendar.JULY, 10, 23, 59, 0);
         Date endSearchDate = newCal2.getTime();
 
         // when
         List<TestEntity> testEntities = testRepository.findByCreatedDateIsBetween(startSearchDate, endSearchDate);
 
         List<TestResultDto> resultDtos = testCalcHandler.avgCpuUsage(testEntities, CalendarType.DAY);
-        Double minValue = testCalcHandler.minCpuUsage(testEntities, CalendarType.DAY);
-        Double maxValue = testCalcHandler.maxCpuUsage(testEntities, CalendarType.DAY);
+        Double minValue = testCalcHandler.minCpuUsage(resultDtos, CalendarType.DAY);
+        Double maxValue = testCalcHandler.maxCpuUsage(resultDtos, CalendarType.DAY);
 
         // then
-
         for (int i = 0; i < resultDtos.size(); i++) {
             Double v = resultDtos.get(i).getAvg();
             if (v < min) {
@@ -217,7 +217,10 @@ public class ValidationCodeWithDatabaseTests {
                 max = v;
             }
         }
-        Assertions.assertEquals(7, resultDtos.size());
+
+        resultDtos.sort(Comparator.comparing(TestResultDto::getDays));
+
+        Assertions.assertEquals(33, resultDtos.size());
         Assertions.assertEquals(min, minValue);
         Assertions.assertEquals(max, maxValue);
 
@@ -292,8 +295,8 @@ public class ValidationCodeWithDatabaseTests {
         // when
         List<TestEntity> createdDate = testRepository.findByCreatedDate(searchDate);
         List<TestResultDto> testPerHourResultDtos = testCalcHandler.avgCpuUsage(createdDate, CalendarType.HOUR);
-        Double maxValue = testCalcHandler.maxCpuUsage(createdDate, CalendarType.HOUR);
-        Double minValue = testCalcHandler.minCpuUsage(createdDate, CalendarType.HOUR);
+        Double maxValue = testCalcHandler.maxCpuUsage(testPerHourResultDtos, CalendarType.HOUR);
+        Double minValue = testCalcHandler.minCpuUsage(testPerHourResultDtos, CalendarType.HOUR);
 
         // then
         Assertions.assertEquals(1440, createdDate.size());
@@ -335,7 +338,110 @@ public class ValidationCodeWithDatabaseTests {
         // then
         Assertions.assertEquals(1440, createdDate.size());
         Assertions.assertEquals(1, testResultDtos.size()); // 일 당 평균값이므로 1
+    }
+
+    @Test
+    @DisplayName("일 단위 조회: 지정한 날짜 구간의 일 단위 CPU 최소/최대/평균 사용률을 조회할 때, 데이터가 없는 일자에 접근하는 경우.")
+    public void minMaxAvgCpuUsagePerDayAccessNullDate() {
+
+        // given (5일부터 7일까지 분 단위 랜덤 값 저장)
+        for (int i = 0; i < testSaveMinuteValue * 2; i++) {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTimeZone(TimeZone.getTimeZone(timer.Seoul));
+            calendar.set(2024, Calendar.JUNE, 5, 0, i, 00);
+            Date date = calendar.getTime();
+            double random = ((int) (Math.random() * 8880) + 1) / 100.0;
+            TestEntity testEntity = new TestEntity(random, date, date);
+            testRepository.save(testEntity);
+        }
+
+        // 15 일 ~ 21 사이 데이터 조회
+        Calendar newCal1 = Calendar.getInstance();
+        newCal1.setTimeZone(TimeZone.getTimeZone(timer.Seoul));
+        newCal1.set(2024, Calendar.JUNE, 15, 0, 0, 00);
+        Date startSearchDate = newCal1.getTime();
+
+        Calendar newCal2 = Calendar.getInstance();
+        newCal2.setTimeZone(TimeZone.getTimeZone(timer.Seoul));
+        newCal2.set(2024, Calendar.JUNE, 21, 23, 59, 0);
+        Date endSearchDate = newCal2.getTime();
+
+        // when
+        List<TestEntity> testEntities = testRepository.findByCreatedDateIsBetween(startSearchDate, endSearchDate);
+
+        List<TestResultDto> resultDtos = testCalcHandler.avgCpuUsage(testEntities, CalendarType.DAY);
+
+        // then
+        Assertions.assertEquals(0, resultDtos.size());
+
+        Assertions.assertThrows(NullPointerException.class, () -> {
+            Double minValue = testCalcHandler.minCpuUsage(resultDtos, CalendarType.DAY);
+            Double maxValue = testCalcHandler.maxCpuUsage(resultDtos, CalendarType.DAY);
+            System.out.println("maxValue = " + maxValue);
+            System.out.println("minValue = " + minValue);
+        });
+
+        // print
+        resultDtos.forEach(result -> {
+            System.out.printf("cpu Avg -> %s, days -> %s\n", result.getAvg(),
+                    result.getDays());
+        });
+    }
+
+    @Test
+    @DisplayName("일 단위 조회: 1년 이전의 데이터에 접근하려는 경우 에러")
+    public void accessCpuUsageDataBefore1YearAgo() {
+
+        // given (5일부터 7일까지 분 단위 랜덤 값 저장)
+        for (int i = 0; i < testSaveMinuteValue * 2; i++) {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTimeZone(TimeZone.getTimeZone(timer.Seoul));
+            calendar.set(2024, Calendar.JUNE, 5, 0, i, 00);
+            Date date = calendar.getTime();
+            double random = ((int) (Math.random() * 8880) + 1) / 100.0;
+            TestEntity testEntity = new TestEntity(random, date, date);
+            testRepository.save(testEntity);
+        }
+
+        // 오늘 날짜 25일이 지났으니까 에러가 떠야한다
+        Calendar newCal1 = Calendar.getInstance();
+        newCal1.setTimeZone(TimeZone.getTimeZone(timer.Seoul));
+        newCal1.set(2023, Calendar.MAY, 25, 0, 0, 00);
+        Date startSearchDate = newCal1.getTime();
+
+        Calendar newCal2 = Calendar.getInstance();
+        newCal2.setTimeZone(TimeZone.getTimeZone(timer.Seoul));
+        newCal2.set(2024, Calendar.JUNE, 21, 23, 59, 0);
+        Date endSearchDate = newCal2.getTime();
 
 
+        // when
+        List<TestEntity> testEntities = testRepository.findByCreatedDateIsBetween(startSearchDate, endSearchDate);
+
+        List<TestResultDto> resultDtos = testCalcHandler.avgCpuUsage(testEntities, CalendarType.DAY);
+
+        // then
+        Assertions.assertThrows(InvalidateCalendarException.class, () -> {
+            validCalendarRecentDataWithinAYears(newCal1);
+        });
+
+        // print
+        resultDtos.forEach(result -> {
+            System.out.printf("cpu Avg -> %s, days -> %s\n", result.getAvg(),
+                    result.getDays());
+        });
+    }
+
+    // 최근 1년 이내 데이터만 검색 허용
+    private void validCalendarRecentDataWithinAYears(Calendar calendar) {
+        Calendar now = Calendar.getInstance();
+        now.setTimeZone(TimeZone.getTimeZone(CustomTimer.Seoul));
+
+        Calendar aYearsAgo = (Calendar) now.clone();
+        aYearsAgo.add(Calendar.YEAR, -1);
+
+        if (calendar.before(aYearsAgo) || calendar.after(now)) {
+            throw new InvalidateCalendarException("You can only access data from last 1 years.");
+        }
     }
 }

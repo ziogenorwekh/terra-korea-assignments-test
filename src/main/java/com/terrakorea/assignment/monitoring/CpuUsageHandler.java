@@ -9,15 +9,13 @@ import java.util.*;
 @Component
 public class CpuUsageHandler {
 
-    public Double maxCpuUsage(List<CpuUsageEntityDto> cpuUsageEntityDtoList, CalendarType calenderType) {
-        List<UsageResultVO> testResultsPerDay = this.getTestResults(cpuUsageEntityDtoList, calenderType);
-        return testResultsPerDay.stream().mapToDouble(UsageResultVO::getAvg).max()
+    public Double maxCpuUsage(List<UsageResultVO> usageResultVOS) {
+        return usageResultVOS.stream().mapToDouble(UsageResultVO::getAvg).max()
                 .orElseThrow(NullPointerException::new);
     }
 
-    public Double minCpuUsage(List<CpuUsageEntityDto> cpuUsageEntityDtoList, CalendarType calenderType) {
-        List<UsageResultVO> testResultsPerDay = this.getTestResults(cpuUsageEntityDtoList, calenderType);
-        return testResultsPerDay.stream()
+    public Double minCpuUsage(List<UsageResultVO> usageResultVOS) {
+        return usageResultVOS.stream()
                 .mapToDouble(UsageResultVO::getAvg)
                 .min().orElseThrow(NullPointerException::new);
     }
@@ -48,13 +46,14 @@ public class CpuUsageHandler {
                 int day = calendar.get(Calendar.DATE);
                 mapHours.computeIfAbsent(day, k -> new ArrayList<>()).add(result);
             });
-            mapHours.forEach((integer, testEntities1) -> {
-                double avgResult = testEntities1.stream().mapToDouble(CpuUsageEntityDto::getCpuUsage).average()
-                        .orElseThrow(NullPointerException::new);
-                resultDtoList.add(UsageResultVO.builder().days(integer).avg(avgResult).build());
+            mapHours.forEach((integer, dtoList) -> {
+                if (!dtoList.isEmpty()) {
+                    double avgResult = dtoList.stream().mapToDouble(CpuUsageEntityDto::getCpuUsage).average()
+                            .orElseThrow(NullPointerException::new);
+                    resultDtoList.add(UsageResultVO.builder().days(dtoList.get(0).getCreatedDate()).avg(avgResult).build());
+                }
             });
         }
         return resultDtoList;
-
     }
 }
