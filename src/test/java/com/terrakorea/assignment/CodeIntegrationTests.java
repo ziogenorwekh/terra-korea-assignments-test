@@ -1,18 +1,17 @@
 package com.terrakorea.assignment;
 
 import com.terrakorea.assignment.api.CpuUsageResources;
-import com.terrakorea.assignment.entity.CpuUsageEntity;
-import com.terrakorea.assignment.monitoring.CustomTimer;
 import com.terrakorea.assignment.repository.CpuUsageRepository;
 import com.terrakorea.assignment.service.CpuUsageService;
-import com.terrakorea.assignment.service.CpuUsageServiceImpl;
 import com.terrakorea.assignment.vo.*;
-import jakarta.annotation.PostConstruct;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
 import org.junit.jupiter.api.*;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,6 +40,15 @@ public class CodeIntegrationTests {
     private CpuUsageHourResponse cpuUsageHour;
     private CpuUsageDayResponse cpuUsageDay;
 
+    private static ValidatorFactory factory;
+    private static Validator validator;
+
+    @BeforeAll
+    public static void init() {
+        factory = Validation.buildDefaultValidatorFactory();
+        validator = factory.getValidator();
+    }
+
     @BeforeAll
     public void setUp() {
     }
@@ -53,11 +61,12 @@ public class CodeIntegrationTests {
 
     @AfterEach
     public void tearDown() {
+        factory.close();
     }
 
 
     @Test
-    @DisplayName("분 단위의 데이터 조회 API 테스트")
+    @DisplayName("분 단위의 데이터 조회 API 테스트 및 Validation 테스트")
     public void retrieveAMinuteResources() {
 
         // given
@@ -71,10 +80,23 @@ public class CodeIntegrationTests {
         Assertions.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assertions.assertEquals(minuteResponses, responseEntity.getBody());
         Mockito.verify(mockCpuUsageService, Mockito.times(1)).findCpuUsageMinute(Mockito.any());
+
+        // given
+        CpuUsageRequest cpuUsageRequest = new CpuUsageRequest(2024, 14, 10, 0);
+
+        // when
+        Set<ConstraintViolation<CpuUsageRequest>> violation = validator.validate(cpuUsageRequest);
+
+        // then
+        Assertions.assertTrue(!violation.isEmpty());
+        violation.forEach(error -> {
+            Assertions.assertEquals("Month must be less than or equal to 12", error.getMessage());
+        });
+
     }
 
     @Test
-    @DisplayName("시간 단위의 데이터 조회 API 테스트")
+    @DisplayName("시간 단위의 데이터 조회 API 테스트 및 Validation 테스트")
     public void retrieveAHourResources() {
         // given
         Mockito.when(mockCpuUsageService.findCpuUsageHour(Mockito.any())).thenReturn(cpuUsageHour);
@@ -87,6 +109,18 @@ public class CodeIntegrationTests {
         Assertions.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assertions.assertEquals(cpuUsageHour, responseEntity.getBody());
         Mockito.verify(mockCpuUsageService, Mockito.times(1)).findCpuUsageHour(Mockito.any());
+
+        // given
+        CpuUsageRequest cpuUsageRequest = new CpuUsageRequest(1800, 12, 10, 0);
+
+        // when
+        Set<ConstraintViolation<CpuUsageRequest>> violation = validator.validate(cpuUsageRequest);
+
+        // then
+        Assertions.assertTrue(!violation.isEmpty());
+        violation.forEach(error -> {
+            Assertions.assertEquals("Year must be greater than or equal to 1990", error.getMessage());
+        });
     }
 
     @Test
