@@ -2,14 +2,15 @@ package com.terrakorea.assignment.service;
 
 
 import com.terrakorea.assignment.vo.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
 public interface CpuUsageService {
 
-    List<CpuUsageMinuteResponse> findCpuUsageMinute(CpuUsageRequest cpuUsageRequest);
+    List<CpuUsageMinuteResponse> findCpuUsageMinute(@Valid CpuUsageRequest cpuUsageRequest);
 
-    List<CpuUsageHourResponse> findCpuUsageHour(CpuUsageRequest cpuUsageRequest);
+    CpuUsageHourResponse findCpuUsageHour(@Valid CpuUsageRequest cpuUsageRequest);
 
-    CpuUsageDayResponse findCpuUsageDay(CpuUsageRangeRequest cpuUsageRangeRequest);
+    CpuUsageDayResponse findCpuUsageDay(@Valid CpuUsageRangeRequest cpuUsageRangeRequest);
 }

@@ -2,16 +2,14 @@ package com.terrakorea.assignment.mapper;
 
 import com.terrakorea.assignment.entity.CpuUsageEntity;
 import com.terrakorea.assignment.dto.CpuUsageEntityDto;
-import com.terrakorea.assignment.monitoring.CustomTimer;
 import com.terrakorea.assignment.monitoring.UsageResultVO;
 import com.terrakorea.assignment.vo.CpuUsageDayResponse;
 import com.terrakorea.assignment.vo.CpuUsageHourResponse;
 import com.terrakorea.assignment.vo.CpuUsageMinuteResponse;
 import org.springframework.stereotype.Component;
 
-import java.util.Calendar;
 import java.util.Date;
-import java.util.TimeZone;
+import java.util.List;
 
 @Component
 public class CpuUsageDataMapper {
@@ -27,7 +25,7 @@ public class CpuUsageDataMapper {
     }
 
 
-    public CpuUsageMinuteResponse dtoToMinuteResponse(CpuUsageEntityDto cpuUsageEntityDto) {
+    public CpuUsageMinuteResponse dtoToCpuUsageMinuteResponse(CpuUsageEntityDto cpuUsageEntityDto) {
         return CpuUsageMinuteResponse.builder()
                 .cpuUsage(cpuUsageEntityDto.getCpuUsage())
                 .date(cpuUsageEntityDto.getCreatedDate())
@@ -35,18 +33,12 @@ public class CpuUsageDataMapper {
                 .build();
     }
 
-    public CpuUsageHourResponse dtoToHourResponse(Date searchDate, UsageResultVO usageResultVO,
-                                                  Double maxValue, Double minValue) {
-        return CpuUsageHourResponse.builder()
-                .time(usageResultVO.getHour())
-                .date(searchDate)
-                .avgCpuUsage(usageResultVO.getAvg())
-                .maxCpuUsage(maxValue)
-                .minCpuUsage(minValue)
-                .build();
+    public CpuUsageHourResponse dtoToCpuUsageHourResponse(Date searchDate, List<UsageResultVO> usageResultVO,
+                                                          Double maxValue, Double minValue) {
+        return new CpuUsageHourResponse(searchDate, minValue, maxValue, usageResultVO);
     }
 
-    public CpuUsageDayResponse dtoToDayResponse(CpuUsageEntityDto cpuUsageEntityDto) {
-        return null;
+    public CpuUsageDayResponse dtoToCpuUsageDayResponse(List<UsageResultVO> usageResultVO, Double maxValue, Double minValue) {
+        return new CpuUsageDayResponse(minValue, maxValue, usageResultVO);
     }
 }

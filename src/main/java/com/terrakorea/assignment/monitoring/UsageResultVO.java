@@ -7,13 +7,13 @@ import java.util.Date;
 
 @Getter
 public class UsageResultVO {
-    private Date days;
+    private Date date;
     private Double avg;
     private Integer hour;
 
     @Builder
-    public UsageResultVO(Date days, Double avg, Integer hour) {
-        this.days = days;
+    public UsageResultVO(Date date, Double avg, Integer hour) {
+        this.date = date;
         this.avg = avg;
         this.hour = hour;
     }

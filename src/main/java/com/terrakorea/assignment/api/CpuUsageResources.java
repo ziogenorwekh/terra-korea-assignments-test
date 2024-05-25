@@ -2,10 +2,7 @@ package com.terrakorea.assignment.api;
 
 import com.terrakorea.assignment.monitoring.CustomTimer;
 import com.terrakorea.assignment.service.CpuUsageService;
-import com.terrakorea.assignment.vo.CpuUsageHourResponse;
-import com.terrakorea.assignment.vo.CpuUsageMinuteResponse;
-import com.terrakorea.assignment.vo.CpuUsageRangeRequest;
-import com.terrakorea.assignment.vo.CpuUsageRequest;
+import com.terrakorea.assignment.vo.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -48,35 +45,41 @@ public class CpuUsageResources {
     }
 
     @RequestMapping(value = "/usage/hour/{year}/{month}/{day}", method = RequestMethod.GET)
-    public ResponseEntity<List<CpuUsageHourResponse>> retrieveAHoursCpuUsage(@PathVariable int day,
-                                                                             @PathVariable int month,
-                                                                             @PathVariable int year) {
-        List<CpuUsageHourResponse> cpuUsageHourResponses = cpuUsageService.findCpuUsageHour(CpuUsageRequest.builder()
+    public ResponseEntity<CpuUsageHourResponse> retrieveAHoursCpuUsage(
+            @PathVariable int year,
+            @PathVariable int month,
+            @PathVariable int day
+            ) {
+        CpuUsageHourResponse cpuUsageHourResponse = cpuUsageService.findCpuUsageHour(CpuUsageRequest.builder()
                 .year(year)
                 .month(month)
                 .day(day)
                 .build());
 
-        return ResponseEntity.ok().body(cpuUsageHourResponses);
+        return ResponseEntity.ok().body(cpuUsageHourResponse);
     }
 
-    @RequestMapping(value = "/usage/day/{year}/from/{fromMonth}/{fromDay}/to/{toMonth}/{toDay}", method = RequestMethod.GET)
-    public ResponseEntity<Void> retrieveADaysCpuUsage(@PathVariable int fromDay,
-                                                      @PathVariable int fromMonth,
-                                                      @PathVariable int toDay,
-                                                      @PathVariable int toMonth,
-                                                      @PathVariable int year) {
+    @RequestMapping(value = "/usage/day/from/{fromYear}/{fromMonth}/{fromDay}/to/{toYear}/{toMonth}/{toDay}",
+            method = RequestMethod.GET)
+    public ResponseEntity<CpuUsageDayResponse> retrieveADaysCpuUsage(
+            @PathVariable int fromYear,
+            @PathVariable int fromDay,
+            @PathVariable int fromMonth,
+            @PathVariable int toYear,
+            @PathVariable int toDay,
+            @PathVariable int toMonth
+    ) {
 
-        cpuUsageService.findCpuUsageDay(CpuUsageRangeRequest.builder()
-                .year(year)
+        CpuUsageDayResponse cpuUsageDayResponses = cpuUsageService.findCpuUsageDay(CpuUsageRangeRequest.builder()
+                .fromYear(fromYear)
                 .fromMonth(fromMonth)
                 .fromDay(fromDay)
+                .toYear(toYear)
                 .toMonth(toMonth)
                 .toDay(toDay)
                 .build());
 
-
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok().body(cpuUsageDayResponses);
     }
 
 }

@@ -62,37 +62,35 @@ public class CpuUsageServiceImpl implements CpuUsageService {
 
         isNotFoundData(mappingDto);
 
-        return mappingDto.stream().map(cpuUsageDataMapper::dtoToMinuteResponse).toList();
+        return mappingDto.stream().map(cpuUsageDataMapper::dtoToCpuUsageMinuteResponse).toList();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<CpuUsageHourResponse> findCpuUsageHour(CpuUsageRequest cpuUsageRequest) {
+    public CpuUsageHourResponse findCpuUsageHour(CpuUsageRequest cpuUsageRequest) {
 
         // 현재 시간 변환
         Calendar findCalendar = Calendar.getInstance();
         findCalendar.setTimeZone(TimeZone.getTimeZone(CustomTimer.Seoul));
         findCalendar.set(cpuUsageRequest.getYear(), cpuUsageRequest.getMonth() - 1, cpuUsageRequest.getDay(),
                 0, 0, 0);
+
         validCalendarRecentDataWithinThreeMonths(findCalendar);
 
         List<CpuUsageEntityDto> cpuUsageEntities = cpuUsageRepository.findByCreatedDate(findCalendar.getTime())
                 .stream().map(cpuUsageDataMapper::entityToDto).toList();
+
         isNotFoundData(cpuUsageEntities);
 
         List<UsageResultVO> resultVOList = cpuUsageHandler.avgCpuUsage(cpuUsageEntities, CalendarType.HOUR);
         Double maxValue = cpuUsageHandler.maxCpuUsage(resultVOList);
         Double minValue = cpuUsageHandler.minCpuUsage(resultVOList);
 
-        List<CpuUsageHourResponse> cpuUsageHourResponses = new ArrayList<>();
-        // 여기 부터 코드 짜기
-        resultVOList.forEach(resultVO -> {
-            cpuUsageHourResponses.add(cpuUsageDataMapper
-                    .dtoToHourResponse(findCalendar.getTime(), resultVO, maxValue, minValue));
-        });
+        CpuUsageHourResponse cpuUsageHourResponse = cpuUsageDataMapper
+                .dtoToCpuUsageHourResponse(findCalendar.getTime(), resultVOList, maxValue, minValue);
 
 
-        return cpuUsageHourResponses;
+        return cpuUsageHourResponse;
     }
 
     @Override
@@ -100,7 +98,7 @@ public class CpuUsageServiceImpl implements CpuUsageService {
     public CpuUsageDayResponse findCpuUsageDay(CpuUsageRangeRequest cpuUsageRangeRequest) {
         Calendar startCalendar = Calendar.getInstance();
         startCalendar.setTimeZone(TimeZone.getTimeZone(CustomTimer.Seoul));
-        startCalendar.set(cpuUsageRangeRequest.getYear(), cpuUsageRangeRequest.getFromMonth() - 1,
+        startCalendar.set(cpuUsageRangeRequest.getFromYear(), cpuUsageRangeRequest.getFromMonth() - 1,
                 cpuUsageRangeRequest.getFromDay(), 0, 0, 0);
         Date startDate = startCalendar.getTime();
 
@@ -108,25 +106,24 @@ public class CpuUsageServiceImpl implements CpuUsageService {
 
         Calendar endCalendar = Calendar.getInstance();
         endCalendar.setTimeZone(TimeZone.getTimeZone(CustomTimer.Seoul));
-        endCalendar.set(cpuUsageRangeRequest.getYear(), cpuUsageRangeRequest.getToMonth() - 1,
+        endCalendar.set(cpuUsageRangeRequest.getToYear(), cpuUsageRangeRequest.getToMonth() - 1,
                 cpuUsageRangeRequest.getToDay() - 1, 23, 59, 59);
         Date endDate = endCalendar.getTime();
 
         List<CpuUsageEntityDto> cpuUsageEntities = cpuUsageRepository.findByCreatedDateIsBetween(startDate, endDate)
                 .stream().map(cpuUsageDataMapper::entityToDto).toList();
+
         isNotFoundData(cpuUsageEntities);
 
         List<UsageResultVO> usageResultVOS = cpuUsageHandler.avgCpuUsage(cpuUsageEntities, CalendarType.DAY);
         Double maxValue = cpuUsageHandler.maxCpuUsage(usageResultVOS);
         Double minValue = cpuUsageHandler.minCpuUsage(usageResultVOS);
 
-        List<CpuUsageDayResponse> cpuUsageDayResponses = new ArrayList<>();
+        usageResultVOS.sort(Comparator.comparing(UsageResultVO::getDate));
 
-        usageResultVOS.forEach(usageResultVO -> {
-//            cpuUsageDayResponses.add()
-        });
+        CpuUsageDayResponse cpuUsageDayResponse = cpuUsageDataMapper.dtoToCpuUsageDayResponse(usageResultVOS, maxValue, minValue);
 
-        return null;
+        return cpuUsageDayResponse;
     }
 
 
@@ -138,8 +135,10 @@ public class CpuUsageServiceImpl implements CpuUsageService {
         Calendar sevenDaysAgo = (Calendar) now.clone();
         sevenDaysAgo.add(Calendar.DAY_OF_MONTH, -7);
 
-        if (calendar.before(sevenDaysAgo) || calendar.after(now)) {
+        if (calendar.before(sevenDaysAgo)) {
             throw new InvalidateCalendarException("You can only access data from last 7 days.");
+        } else if (calendar.after(now)) {
+            throw new InvalidateCalendarException("Unable to query data beyond today.");
         }
     }
 
@@ -151,8 +150,10 @@ public class CpuUsageServiceImpl implements CpuUsageService {
         Calendar threeMonthsAgo = (Calendar) now.clone();
         threeMonthsAgo.add(Calendar.MONTH, -3);
 
-        if (calendar.before(threeMonthsAgo) || calendar.after(now)) {
+        if (calendar.before(threeMonthsAgo)) {
             throw new InvalidateCalendarException("You can only access data from last 3 months.");
+        }else if (calendar.after(now)) {
+            throw new InvalidateCalendarException("Unable to query data beyond today.");
         }
     }
 
@@ -164,8 +165,10 @@ public class CpuUsageServiceImpl implements CpuUsageService {
         Calendar aYearsAgo = (Calendar) now.clone();
         aYearsAgo.add(Calendar.YEAR, -1);
 
-        if (calendar.before(aYearsAgo) || calendar.after(now)) {
+        if (calendar.before(aYearsAgo)) {
             throw new InvalidateCalendarException("You can only access data from last 1 years.");
+        } else if (calendar.after(now)) {
+            throw new InvalidateCalendarException("Unable to query data beyond today.");
         }
     }
 

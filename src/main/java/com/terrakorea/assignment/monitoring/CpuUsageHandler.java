@@ -25,32 +25,29 @@ public class CpuUsageHandler {
     }
 
     private List<UsageResultVO> getTestResults(List<CpuUsageEntityDto> cpuUsageEntityDtoList, CalendarType calenderType) {
-        Map<Integer, List<CpuUsageEntityDto>> mapHours = new HashMap<>();
+        Map<Object, List<CpuUsageEntityDto>> mapHours = new HashMap<>();
         List<UsageResultVO> resultDtoList = new ArrayList<>();
         if (calenderType == CalendarType.HOUR) {
             cpuUsageEntityDtoList.forEach(result -> {
                 Calendar calendar = Calendar.getInstance();
                 calendar.setTime(result.getCreatedTime());
-                int day = calendar.get(Calendar.HOUR_OF_DAY);
-                mapHours.computeIfAbsent(day, k -> new ArrayList<>()).add(result);
+                int hour = calendar.get(Calendar.HOUR_OF_DAY);
+                mapHours.computeIfAbsent(hour, k -> new ArrayList<>()).add(result);
             });
             mapHours.forEach((integer, testEntities1) -> {
                 double avgResult = testEntities1.stream().mapToDouble(CpuUsageEntityDto::getCpuUsage).average()
                         .orElseThrow(NullPointerException::new);
-                resultDtoList.add(UsageResultVO.builder().avg(avgResult).hour(integer).build());
+                resultDtoList.add(UsageResultVO.builder().avg(avgResult).hour((Integer) integer).build());
             });
         } else {
             cpuUsageEntityDtoList.forEach(result -> {
-                Calendar calendar = Calendar.getInstance();
-                calendar.setTime(result.getCreatedDate());
-                int day = calendar.get(Calendar.DATE);
-                mapHours.computeIfAbsent(day, k -> new ArrayList<>()).add(result);
+                mapHours.computeIfAbsent(result.getCreatedDate(), k -> new ArrayList<>()).add(result);
             });
             mapHours.forEach((integer, dtoList) -> {
                 if (!dtoList.isEmpty()) {
                     double avgResult = dtoList.stream().mapToDouble(CpuUsageEntityDto::getCpuUsage).average()
                             .orElseThrow(NullPointerException::new);
-                    resultDtoList.add(UsageResultVO.builder().days(dtoList.get(0).getCreatedDate()).avg(avgResult).build());
+                    resultDtoList.add(UsageResultVO.builder().date(dtoList.get(0).getCreatedDate()).avg(avgResult).build());
                 }
             });
         }

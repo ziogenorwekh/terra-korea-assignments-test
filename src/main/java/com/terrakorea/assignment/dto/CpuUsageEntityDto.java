@@ -14,7 +14,7 @@ import java.util.Date;
 @Getter
 @Builder
 @EqualsAndHashCode
-public class CpuUsageEntityDto implements Serializable {
+public class CpuUsageEntityDto {
 
     private final Long id;
     private final Double cpuUsage;
