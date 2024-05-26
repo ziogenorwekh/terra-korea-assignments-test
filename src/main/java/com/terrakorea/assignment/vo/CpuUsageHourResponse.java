@@ -50,7 +50,7 @@ public class CpuUsageHourResponse {
 //        this.avgCpuUsage = avgCpuUsage;
     }
     @Schema(name = "HourResponse -> CpuUsageHourResponse's inner response class")
-    public static class HourResponse {
+    static class HourResponse {
         @Schema(name = "hour", description = "Average cpu usage by hour")
         @JsonProperty("hour")
         private final int time;

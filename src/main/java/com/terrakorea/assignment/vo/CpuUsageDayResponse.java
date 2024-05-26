@@ -43,7 +43,7 @@ public class CpuUsageDayResponse {
         }
     }
     @Schema(name = "DayResponse -> CpuUsageDayResponse's inner response class")
-    public static class DayResponse {
+    static class DayResponse {
 
         @Schema(name = "avgCpuUsage", description = "Average cpu usage")
         private final Double avgCpuUsage;
