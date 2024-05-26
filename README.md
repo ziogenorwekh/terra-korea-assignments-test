@@ -45,7 +45,7 @@
 2. database 생성(예시: assign)
 3. resources/create-table.sql 파일의 테이블을 생성합니다.
 4. 프로젝트 실행(메인클래스 - AssignmentApplication.class)
-
+5. API 문서 접속(url: http://localhost:9000/swagger-ui/index.html)
 
 ### 요구 사항의 해결 방법
 * OSHI 라이브러리를 사용하여 시스템의 CPU 사용량을 실시간으로 모니터링합니다.
