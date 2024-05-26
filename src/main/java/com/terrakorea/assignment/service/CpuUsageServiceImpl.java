@@ -45,17 +45,19 @@ public class CpuUsageServiceImpl implements CpuUsageService {
 
         validCalendarRecentDataWithinWeeks(findCalendar);
 
-        Date findDate = findCalendar.getTime();
-
+        Calendar searchCalendar = Calendar.getInstance();
+        searchCalendar.setTimeZone(TimeZone.getTimeZone(CustomTimer.Seoul));
+        searchCalendar.set(cpuUsageRequest.getYear(), cpuUsageRequest.getMonth() - 1, cpuUsageRequest.getDay());
 
         Calendar endCalendar = (Calendar) findCalendar.clone();
         endCalendar.add(Calendar.HOUR_OF_DAY, 1);
 
+        Date searchDate = searchCalendar.getTime();
         Date startDate = findCalendar.getTime();
         Date endDate = endCalendar.getTime();
 
         List<CpuUsageEntity> cpuUsageEntities = cpuUsageRepository.
-                findByCreatedDateAndCreatedTimeIsBetween(findDate, startDate, endDate);
+                findByCreatedDateAndCreatedTimeIsBetween(searchDate, startDate, endDate);
 
         List<CpuUsageEntityDto> mappingDto = cpuUsageEntities.stream()
                 .map(cpuUsageDataMapper::entityToDto).toList();
@@ -106,8 +108,9 @@ public class CpuUsageServiceImpl implements CpuUsageService {
 
         Calendar endCalendar = Calendar.getInstance();
         endCalendar.setTimeZone(TimeZone.getTimeZone(CustomTimer.Seoul));
+
         endCalendar.set(cpuUsageRangeRequest.getToYear(), cpuUsageRangeRequest.getToMonth() - 1,
-                cpuUsageRangeRequest.getToDay() - 1, 23, 59, 59);
+                cpuUsageRangeRequest.getToDay(), 23, 59, 59);
         Date endDate = endCalendar.getTime();
 
         List<CpuUsageEntityDto> cpuUsageEntities = cpuUsageRepository.findByCreatedDateIsBetween(startDate, endDate)
@@ -152,7 +155,7 @@ public class CpuUsageServiceImpl implements CpuUsageService {
 
         if (calendar.before(threeMonthsAgo)) {
             throw new InvalidateCalendarException("You can only access data from last 3 months.");
-        }else if (calendar.after(now)) {
+        } else if (calendar.after(now)) {
             throw new InvalidateCalendarException("Unable to query data beyond today.");
         }
     }

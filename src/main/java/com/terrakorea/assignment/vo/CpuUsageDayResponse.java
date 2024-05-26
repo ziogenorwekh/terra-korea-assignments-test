@@ -8,6 +8,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -33,7 +35,8 @@ public class CpuUsageDayResponse {
         if (usageResultVOS != null) {
             usageResultVOS.forEach(usageResultVO -> {
                 dayResponses.add(DayResponse.builder()
-                        .avgCpuUsage(usageResultVO.getAvg())
+                        .avgCpuUsage(BigDecimal.valueOf(usageResultVO.getAvg())
+                                .setScale(4, RoundingMode.HALF_UP).doubleValue())
                         .date(usageResultVO.getDate())
                         .build());
             });
@@ -46,7 +49,7 @@ public class CpuUsageDayResponse {
         private final Double avgCpuUsage;
 
         @Schema(name = "Date", description = "Average cpu usage by date")
-        @JsonFormat(pattern = "yyyy-MM-dd")
+        @JsonFormat(pattern = "yyyy-MM-dd", timezone = "Asia/Seoul")
         private final Date date;
 
         @Builder

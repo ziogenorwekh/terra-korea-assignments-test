@@ -8,6 +8,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -18,7 +20,7 @@ import java.util.List;
 public class CpuUsageHourResponse {
 
     @Schema(name = "Date", description = "Date inquired")
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "Asia/Seoul")
     private final Date date;
     //    private final int time;
     @Schema(name = "minCpuUsage", description = "Min cpu usage")
@@ -39,7 +41,8 @@ public class CpuUsageHourResponse {
         if (usageResultVOS != null) {
             usageResultVOS.forEach(usageResultVO -> {
                 hourResponses.add(HourResponse.builder()
-                        .avgCpuUsage(usageResultVO.getAvg())
+                        .avgCpuUsage(BigDecimal.valueOf(usageResultVO.getAvg())
+                                .setScale(4, RoundingMode.HALF_UP).doubleValue())
                         .time(usageResultVO.getHour())
                         .build());
             });

@@ -17,11 +17,11 @@ public class CpuUsageMinuteResponse {
     private final Double cpuUsage;
 
     @Schema(name = "Date", description = "Date inquired")
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "Asia/Seoul")
     private final Date date;
 
     @Schema(name = "minute", description = "minute inquired")
-    @JsonFormat(pattern = "HH:mm:ss")
+    @JsonFormat(pattern = "HH:mm:ss", timezone = "Asia/Seoul")
     private final Date time;
 
     @Builder

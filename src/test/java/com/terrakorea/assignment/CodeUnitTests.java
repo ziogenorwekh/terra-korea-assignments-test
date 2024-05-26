@@ -1,15 +1,19 @@
 package com.terrakorea.assignment;
 
+import com.terrakorea.assignment.config.SwaggerConfig;
 import com.terrakorea.assignment.entity.CpuUsageEntity;
 import com.terrakorea.assignment.exception.InvalidateCalendarException;
+import com.terrakorea.assignment.monitoring.CpuUsageRegister;
 import com.terrakorea.assignment.monitoring.CustomTimer;
 import com.terrakorea.assignment.repository.CpuUsageRepository;
 import com.terrakorea.assignment.service.CpuUsageService;
 import com.terrakorea.assignment.vo.*;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.TestPropertySource;
+import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -17,8 +21,10 @@ import java.util.List;
 import java.util.TimeZone;
 
 @SpringBootTest
-@TestPropertySource(value = "/application-test.yml")
+@AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2,
+        replace = AutoConfigureTestDatabase.Replace.ANY)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@MockBean({CpuUsageRegister.class,SwaggerConfig.class})
 // 유닛 테스트: 서비스 계층과 데이터베이스 계층의 유닛 테스트를 작성하세요.
 public class CodeUnitTests {
 
@@ -39,10 +45,10 @@ public class CodeUnitTests {
     @BeforeAll
     public void setUp() {
         // given(common) 60일의 분 단위 데이터 저장 2월부터 5월 말까지
-        for (int i = 0; i < aDay * 120; i++) {
+        for (int i = 0; i < aDay * 90; i++) {
             Calendar calendar = Calendar.getInstance();
             calendar.setTimeZone(TimeZone.getTimeZone(CustomTimer.Seoul));
-            calendar.set(2024, Calendar.FEBRUARY, 1, 0, i, 00);
+            calendar.set(2024, Calendar.MARCH, 1, 0, i, 00);
             Date date = calendar.getTime();
             double random;
             if (i % 7 == 0) {
@@ -61,7 +67,7 @@ public class CodeUnitTests {
 
     @AfterAll
     public void tearDown() {
-        cpuUsageRepository.deleteAll();
+//        cpuUsageRepository.deleteAll();
     }
 
     @Test
@@ -108,7 +114,7 @@ public class CodeUnitTests {
         Assertions.assertEquals(24, cpuUsageHour.getHourResponses().size());
 
         // print
-        System.out.println(cpuUsageHour);
+//        System.out.println(cpuUsageHour);
 
         // given
         hourCpuUsageRequest = new CpuUsageRequest(2024, 2, 10, 1);
@@ -138,7 +144,7 @@ public class CodeUnitTests {
     }
 
     @Test
-    @DisplayName("일 단위 데이터 검색 및 최근 데이터(일 년이내)만 조회 가능한지")
+    @DisplayName("일 단위 데이터 검색 및 최근 데이터(일 년이내)만 조회 가능한지 같은 날짜로 조회가 가능한지")
     public void searchDayData() {
 
         // when
@@ -148,7 +154,7 @@ public class CodeUnitTests {
         Assertions.assertEquals(45, cpuUsageDay.getDayResponses().size());
 
         // print
-        System.out.println(cpuUsageDay);
+//        System.out.println(cpuUsageDay);
 
         // given
         dayCpuUsageRangeRequest = new CpuUsageRangeRequest(2023, 3, 10,

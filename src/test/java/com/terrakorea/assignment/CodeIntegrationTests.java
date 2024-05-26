@@ -1,6 +1,7 @@
 package com.terrakorea.assignment;
 
 import com.terrakorea.assignment.api.CpuUsageResources;
+import com.terrakorea.assignment.monitoring.CpuUsageRegister;
 import com.terrakorea.assignment.repository.CpuUsageRepository;
 import com.terrakorea.assignment.service.CpuUsageService;
 import com.terrakorea.assignment.vo.*;
@@ -13,9 +14,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.TestPropertySource;
 
 import java.util.*;
 
@@ -23,8 +24,9 @@ import java.util.*;
 //통합 테스트: 컨트롤러 계층의 통합 테스트를 작성하세요.
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@TestPropertySource(value = "/application-test.yml")
+@MockBean(CpuUsageRegister.class)
 public class CodeIntegrationTests {
+
 
 
     @Mock
