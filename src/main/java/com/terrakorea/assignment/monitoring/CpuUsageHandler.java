@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Component
@@ -28,6 +29,7 @@ public class CpuUsageHandler {
     private List<UsageResultVO> getTestResults(List<CpuUsageEntityDto> cpuUsageEntityDtoList, CalendarType calenderType) {
         Map<Object, List<CpuUsageEntityDto>> mapHours = new HashMap<>();
         List<UsageResultVO> resultDtoList = new ArrayList<>();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         if (calenderType == CalendarType.HOUR) {
             cpuUsageEntityDtoList.forEach(result -> {
                 Calendar calendar = Calendar.getInstance();
@@ -42,7 +44,9 @@ public class CpuUsageHandler {
             });
         } else {
             cpuUsageEntityDtoList.forEach(result -> {
-                mapHours.computeIfAbsent(result.getCreatedDate(), k -> new ArrayList<>()).add(result);
+
+                String formattedDate = dateFormat.format(result.getCreatedDate());
+                mapHours.computeIfAbsent(formattedDate, k -> new ArrayList<>()).add(result);
             });
             mapHours.forEach((integer, dtoList) -> {
                 if (!dtoList.isEmpty()) {

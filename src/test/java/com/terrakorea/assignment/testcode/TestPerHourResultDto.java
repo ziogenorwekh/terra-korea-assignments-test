@@ -1,6 +1,6 @@
 package com.terrakorea.assignment.testcode;
 
-
+@Deprecated
 public class TestPerHourResultDto {
 
     public TestPerHourResultDto(Integer hour, Double avg) {
