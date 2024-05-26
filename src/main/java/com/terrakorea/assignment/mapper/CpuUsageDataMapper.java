@@ -8,6 +8,8 @@ import com.terrakorea.assignment.vo.CpuUsageHourResponse;
 import com.terrakorea.assignment.vo.CpuUsageMinuteResponse;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Date;
 import java.util.List;
 
@@ -27,7 +29,7 @@ public class CpuUsageDataMapper {
 
     public CpuUsageMinuteResponse dtoToCpuUsageMinuteResponse(CpuUsageEntityDto cpuUsageEntityDto) {
         return CpuUsageMinuteResponse.builder()
-                .cpuUsage(cpuUsageEntityDto.getCpuUsage())
+                .cpuUsage(roundValue(cpuUsageEntityDto.getCpuUsage()))
                 .date(cpuUsageEntityDto.getCreatedDate())
                 .time(cpuUsageEntityDto.getCreatedTime())
                 .build();
@@ -35,10 +37,15 @@ public class CpuUsageDataMapper {
 
     public CpuUsageHourResponse dtoToCpuUsageHourResponse(Date searchDate, List<UsageResultVO> usageResultVO,
                                                           Double maxValue, Double minValue) {
-        return new CpuUsageHourResponse(searchDate, minValue, maxValue, usageResultVO);
+        return new CpuUsageHourResponse(searchDate, roundValue(minValue), roundValue(maxValue), usageResultVO);
     }
 
     public CpuUsageDayResponse dtoToCpuUsageDayResponse(List<UsageResultVO> usageResultVO, Double maxValue, Double minValue) {
-        return new CpuUsageDayResponse(minValue, maxValue, usageResultVO);
+        return new CpuUsageDayResponse(roundValue(minValue), roundValue(maxValue), usageResultVO);
+    }
+
+    private Double roundValue(Double value) {
+        return BigDecimal.valueOf(value)
+                .setScale(4, RoundingMode.HALF_UP).doubleValue();
     }
 }

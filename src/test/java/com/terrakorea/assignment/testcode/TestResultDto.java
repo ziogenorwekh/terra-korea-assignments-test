@@ -3,6 +3,7 @@ package com.terrakorea.assignment.testcode;
 
 import java.util.Date;
 
+
 public class TestResultDto {
 
 
@@ -14,6 +15,15 @@ public class TestResultDto {
         this.days = builder.days;
         this.avg = builder.avg;
         this.hour = builder.hour;
+    }
+
+    @Override
+    public String toString() {
+        return "TestResultDto{" +
+                "days=" + days +
+                ", avg=" + avg +
+                ", hour=" + hour +
+                '}';
     }
 
     public Double getAvg() {

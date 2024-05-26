@@ -1,17 +1,14 @@
 package com.terrakorea.assignment;
 
-import com.terrakorea.assignment.exception.DataNotFoundException;
 import com.terrakorea.assignment.exception.InvalidateCalendarException;
 import com.terrakorea.assignment.monitoring.CalendarType;
 import com.terrakorea.assignment.testcode.*;
 import com.terrakorea.assignment.monitoring.CustomTimer;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.TestPropertySource;
+import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import oshi.SystemInfo;
 import oshi.hardware.CentralProcessor;
 import oshi.hardware.HardwareAbstractionLayer;
@@ -20,8 +17,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 
-@SpringBootTest
-@TestPropertySource(value = "/application-test.yml")
+@DataJpaTest(showSql = false)
+@AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2,
+        replace = AutoConfigureTestDatabase.Replace.ANY)
 public class ValidationCodeWithDatabaseTests {
 
     private CustomTimer timer = new CustomTimer();
@@ -29,10 +27,14 @@ public class ValidationCodeWithDatabaseTests {
     @Autowired
     private TestRepository testRepository;
 
-    @Autowired
     private TestCalcHandler testCalcHandler;
 
     private final int testSaveMinuteValue = 60 * 24;
+
+    @BeforeEach
+    public void setUp() {
+        testCalcHandler = new TestCalcHandler();
+    }
 
     @AfterEach
     public void tearDown() {
@@ -224,11 +226,12 @@ public class ValidationCodeWithDatabaseTests {
         Assertions.assertEquals(min, minValue);
         Assertions.assertEquals(max, maxValue);
 
+
         // print
-        resultDtos.forEach(result -> {
-            System.out.printf("cpu Avg -> %s, days -> %s\n", result.getAvg(),
-                    result.getDays());
-        });
+//        resultDtos.forEach(result -> {
+//            System.out.printf("cpu Avg -> %s, days -> %s\n", result.getAvg(),
+//                    result.getDays());
+//        });
     }
 
     @Test
@@ -337,6 +340,7 @@ public class ValidationCodeWithDatabaseTests {
 
         // then
         Assertions.assertEquals(1440, createdDate.size());
+
         Assertions.assertEquals(1, testResultDtos.size()); // 일 당 평균값이므로 1
     }
 
@@ -363,7 +367,7 @@ public class ValidationCodeWithDatabaseTests {
 
         Calendar newCal2 = Calendar.getInstance();
         newCal2.setTimeZone(TimeZone.getTimeZone(timer.Seoul));
-        newCal2.set(2024, Calendar.JUNE, 21, 23, 59, 0);
+        newCal2.set(2024, Calendar.JUNE, 17, 23, 59, 0);
         Date endSearchDate = newCal2.getTime();
 
         // when
@@ -382,10 +386,10 @@ public class ValidationCodeWithDatabaseTests {
         });
 
         // print
-        resultDtos.forEach(result -> {
-            System.out.printf("cpu Avg -> %s, days -> %s\n", result.getAvg(),
-                    result.getDays());
-        });
+//        resultDtos.forEach(result -> {
+//            System.out.printf("cpu Avg -> %s, days -> %s\n", result.getAvg(),
+//                    result.getDays());
+//        });
     }
 
     @Test
@@ -426,10 +430,10 @@ public class ValidationCodeWithDatabaseTests {
         });
 
         // print
-        resultDtos.forEach(result -> {
-            System.out.printf("cpu Avg -> %s, days -> %s\n", result.getAvg(),
-                    result.getDays());
-        });
+//        resultDtos.forEach(result -> {
+//            System.out.printf("cpu Avg -> %s, days -> %s\n", result.getAvg(),
+//                    result.getDays());
+//        });
     }
 
     // 최근 1년 이내 데이터만 검색 허용

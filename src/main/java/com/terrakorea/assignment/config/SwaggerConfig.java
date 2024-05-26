@@ -23,7 +23,7 @@ public class SwaggerConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("sample application API")
+                        .title("Terra-korea Assignments Test")
                         .version(appVersion)
                         .description(appDescription)
                         .termsOfService("http://swagger.io/terms/")

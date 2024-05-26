@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import java.util.Date;
 
 @Entity
+@Table(name = "TEST_ENTITY")
 public class TestEntity {
 
     public TestEntity() {
@@ -32,7 +33,14 @@ public class TestEntity {
     @Column(name = "created_time")
     private Date createdTime;
 
-
+    @Override
+    public String toString() {
+        return "TestEntity{" +
+                "cpuUsage=" + cpuUsage +
+                ", createdDate=" + createdDate +
+                ", createdTime=" + createdTime +
+                '}';
+    }
 
     public Double getCpuUsage() {
         return cpuUsage;

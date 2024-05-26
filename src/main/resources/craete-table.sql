@@ -1,0 +1,7 @@
+CREATE TABLE cpu_usage_table
+(
+    id           BIGINT AUTO_INCREMENT PRIMARY KEY,
+    CPU_USAGE    DOUBLE,
+    CREATED_DATE DATE,
+    CREATED_TIME TIME
+);

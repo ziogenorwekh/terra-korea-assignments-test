@@ -44,7 +44,7 @@ public class CodeIntegrationTests {
     private static Validator validator;
 
     @BeforeAll
-    public static void init() {
+    public void init() {
         factory = Validation.buildDefaultValidatorFactory();
         validator = factory.getValidator();
     }
